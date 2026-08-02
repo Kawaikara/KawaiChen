@@ -1,0 +1,36 @@
+{
+  "name": "kawaichen",
+  "version": "0.0.1",
+  "description": "An Astro-native foundation for documentation and expressive project sites.",
+  "type": "module",
+  "private": true,
+  "files": [
+    "src"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./components/*": "./src/components/*.astro",
+    "./layouts/*": "./src/layouts/*.astro",
+    "./styles/*": "./src/styles/*"
+  },
+  "scripts": {
+    "dev": "pnpm dev:landing",
+    "dev:docs": "pnpm --filter @kawaichen/example-minimal-docs dev",
+    "dev:landing": "pnpm --filter @kawaichen/example-experience-landing dev",
+    "dev:status": "pnpm --filter @kawaichen/example-experience-landing exec astro dev status",
+    "dev:stop": "pnpm --filter @kawaichen/example-experience-landing exec astro dev stop",
+    "preview": "pnpm preview:landing",
+    "preview:docs": "pnpm --filter @kawaichen/example-minimal-docs preview",
+    "preview:landing": "pnpm --filter @kawaichen/example-experience-landing preview",
+    "build": "pnpm -r --if-present build",
+    "check": "pnpm -r --if-present check"
+  },
+  "packageManager": "pnpm@10.33.0",
+  "peerDependencies": {
+    "astro": "^7.1.6"
+  },
+  "devDependencies": {
+    "astro": "^7.1.6"
+  },
+  "license": "MIT"
+}

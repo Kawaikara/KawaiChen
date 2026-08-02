@@ -1,0 +1,26 @@
+:root {
+  color-scheme: light dark;
+  --kc-font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+  --kc-font-mono: "SFMono-Regular", Consolas, monospace;
+  --kc-surface: #fbfbfd;
+  --kc-surface-raised: #ffffff;
+  --kc-text: #18181b;
+  --kc-muted: #686876;
+  --kc-border: #e4e4e9;
+  --kc-accent: #7557e8;
+  --kc-accent-soft: #eeeaff;
+  --kc-header-height: 4rem;
+  --kc-radius: .75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kc-surface: #111114;
+    --kc-surface-raised: #19191e;
+    --kc-text: #f4f4f5;
+    --kc-muted: #a1a1aa;
+    --kc-border: #2d2d34;
+    --kc-accent: #b3a3ff;
+    --kc-accent-soft: #292342;
+  }
+}

@@ -1,0 +1,21 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+  image?: string;
+  canonical?: URL | string;
+}
+
+const { title, description = '', image, canonical } = Astro.props;
+---
+
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width" />
+<meta name="generator" content={Astro.generator} />
+<title>{title}</title>
+{description && <meta name="description" content={description} />}
+{canonical && <link rel="canonical" href={canonical} />}
+<meta property="og:title" content={title} />
+{description && <meta property="og:description" content={description} />}
+{image && <meta property="og:image" content={image} />}
+<slot />

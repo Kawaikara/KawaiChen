@@ -1,0 +1,63 @@
+---
+import type { NavItem, SiteIdentity } from '../types';
+
+interface Props {
+  site: SiteIdentity;
+  nav?: NavItem[];
+}
+
+const { site, nav = [] } = Astro.props;
+const currentPath = Astro.url.pathname;
+---
+
+<header class="kc-header">
+  <a class="kc-brand" href={site.homeHref ?? '/'}>{site.title}</a>
+  {nav.length > 0 && (
+    <nav aria-label="주요 탐색">
+      {nav.map((item) => (
+        <a
+          href={item.href}
+          aria-current={!item.external && currentPath === item.href ? 'page' : undefined}
+          target={item.external ? '_blank' : undefined}
+          rel={item.external ? 'noreferrer' : undefined}
+        >
+          {item.label}
+        </a>
+      ))}
+    </nav>
+  )}
+  <slot name="actions" />
+</header>
+
+<style>
+  .kc-header {
+    align-items: center;
+    backdrop-filter: blur(18px);
+    background: color-mix(in srgb, var(--kc-surface) 86%, transparent);
+    border-bottom: 1px solid var(--kc-border);
+    display: flex;
+    gap: 2rem;
+    min-height: var(--kc-header-height);
+    padding: 0 1.5rem;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  .kc-brand {
+    color: var(--kc-text);
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: -.02em;
+    text-decoration: none;
+  }
+
+  nav { display: flex; gap: 1.25rem; margin-left: auto; }
+  nav a { color: var(--kc-muted); font-size: .9rem; text-decoration: none; }
+  nav a:hover, nav a[aria-current='page'] { color: var(--kc-accent); }
+
+  @media (max-width: 640px) {
+    .kc-header { gap: 1rem; padding-inline: 1rem; }
+    nav { gap: .8rem; }
+  }
+</style>

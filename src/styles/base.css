@@ -1,0 +1,13 @@
+* { box-sizing: border-box; }
+html { background: var(--kc-surface); color: var(--kc-text); font-family: var(--kc-font-sans); }
+body { margin: 0; min-width: 320px; }
+button, input, textarea, select { font: inherit; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--kc-accent) 55%, transparent); outline-offset: 3px; }
+.kc-prose { line-height: 1.75; }
+.kc-prose h1 { font-size: clamp(2rem, 6vw, 3.25rem); letter-spacing: -.04em; line-height: 1.08; margin: 0 0 1.5rem; }
+.kc-prose h2 { border-top: 1px solid var(--kc-border); font-size: 1.45rem; margin-top: 3rem; padding-top: 2rem; }
+.kc-prose p, .kc-prose li { color: var(--kc-muted); }
+.kc-prose a { color: var(--kc-accent); }
+.kc-prose code { background: var(--kc-accent-soft); border-radius: .3rem; font-family: var(--kc-font-mono); padding: .15rem .35rem; }
+.kc-prose pre { background: var(--kc-surface-raised); border: 1px solid var(--kc-border); border-radius: var(--kc-radius); overflow: auto; padding: 1rem; }
+.kc-prose pre code { background: none; padding: 0; }
