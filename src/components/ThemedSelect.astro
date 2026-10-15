@@ -34,7 +34,7 @@ const menuId = `${id}-menu`;
     data-themed-select-trigger
   >
     <span data-themed-select-value data-i18n={selectedOption?.i18nKey}>{selectedOption?.label}</span>
-    <span class="kc-select__chevron" aria-hidden="true">⌄</span>
+    <svg class="kc-select__chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
   </button>
   <div
     class="kc-select__menu"
@@ -187,7 +187,7 @@ const menuId = `${id}-menu`;
     border-color: color-mix(in srgb, var(--kc-accent) 65%, var(--kc-border));
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--kc-accent) 10%, transparent);
   }
-  .kc-select__chevron { color: var(--kc-muted); font-size: .78rem; transition: transform 160ms ease; }
+  .kc-select__chevron { color: var(--kc-muted); display: block; flex: 0 0 14px; transform-origin: center; transition: transform 160ms ease; }
   .kc-select__trigger[aria-expanded='true'] .kc-select__chevron { transform: rotate(180deg); }
   .kc-select__menu {
     background: color-mix(in srgb, var(--kc-surface-raised) 98%, transparent); border: 1px solid var(--kc-border);
