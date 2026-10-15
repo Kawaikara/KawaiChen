@@ -1,5 +1,6 @@
 ---
 import BaseHead from '../components/BaseHead.astro';
+import PersistentDocsShell from '../components/PersistentDocsShell.astro';
 import SiteHeader from '../components/SiteHeader.astro';
 import type { NavItem, SiteIdentity } from '../types';
 import '../styles/tokens.css';
@@ -31,11 +32,17 @@ const currentPath = Astro.url.pathname;
 
 <!doctype html>
 <html lang={lang}>
-  <head><BaseHead title={`${title} · ${site.title}`} {description} /></head>
+  <head>
+    <BaseHead title={`${title} · ${site.title}`} {description}><slot name="head" /></BaseHead>
+  </head>
   <body>
     <SiteHeader {site} {nav}><slot name="header-actions" slot="actions" /></SiteHeader>
-    <div class="kc-docs-shell">
-      <aside class="kc-sidebar" aria-label="문서 탐색">
+    <PersistentDocsShell
+      navigationAriaLabel="문서 탐색"
+      navigationPersistenceKey="kawaichen-documentation-navigation"
+      tocAriaLabel="페이지 목차"
+    >
+      <div class="kc-docs-navigation" slot="navigation">
         <slot name="sidebar">
           <ul>
             {sidebar.map((item) => (
@@ -48,37 +55,17 @@ const currentPath = Astro.url.pathname;
             ))}
           </ul>
         </slot>
-      </aside>
-      <main class="kc-docs-main">
-        <article class="kc-prose"><slot /></article>
-      </main>
-      <aside class="kc-toc" aria-label="페이지 목차"><slot name="toc" /></aside>
-    </div>
+      </div>
+      <slot />
+      <div class="kc-docs-toc" slot="toc"><slot name="toc" /></div>
+    </PersistentDocsShell>
   </body>
 </html>
 
 <style>
-  .kc-docs-shell {
-    display: grid;
-    grid-template-columns: minmax(13rem, 17rem) minmax(0, 48rem) minmax(10rem, 14rem);
-    justify-content: center;
-    min-height: calc(100vh - var(--kc-header-height));
-  }
-  .kc-sidebar, .kc-toc { padding: 2rem 1.25rem; }
-  .kc-sidebar { border-right: 1px solid var(--kc-border); }
-  .kc-sidebar ul { list-style: none; margin: 0; padding: 0; }
-  .kc-sidebar ul ul { border-left: 1px solid var(--kc-border); margin: .5rem 0 .8rem .45rem; padding-left: .8rem; }
-  .kc-sidebar a { color: var(--kc-muted); display: block; padding: .35rem .5rem; text-decoration: none; }
-  .kc-sidebar a:hover, .kc-sidebar a[aria-current='page'] { color: var(--kc-accent); }
-  .kc-docs-main { min-width: 0; padding: 3.5rem clamp(1.25rem, 5vw, 4rem); }
-  .kc-toc { border-left: 1px solid var(--kc-border); color: var(--kc-muted); font-size: .85rem; }
-  @media (max-width: 960px) {
-    .kc-docs-shell { grid-template-columns: 13rem minmax(0, 1fr); }
-    .kc-toc { display: none; }
-  }
-  @media (max-width: 700px) {
-    .kc-docs-shell { display: block; }
-    .kc-sidebar { border-bottom: 1px solid var(--kc-border); border-right: 0; padding: 1rem; }
-    .kc-docs-main { padding-top: 2rem; }
-  }
+  .kc-docs-navigation ul { list-style: none; margin: 0; padding: 0; }
+  .kc-docs-navigation ul ul { border-left: 1px solid var(--kc-border); margin: .5rem 0 .8rem .45rem; padding-left: .8rem; }
+  .kc-docs-navigation a { color: var(--kc-muted); display: block; padding: .35rem .5rem; text-decoration: none; }
+  .kc-docs-navigation a:hover, .kc-docs-navigation a[aria-current='page'] { color: var(--kc-accent); }
+  .kc-docs-toc { color: var(--kc-muted); font-size: .85rem; }
 </style>

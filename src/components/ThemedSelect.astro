@@ -1,0 +1,209 @@
+---
+import type { ThemedSelectOption } from '../types';
+
+interface Props {
+  action?: 'navigate';
+  ariaLabel: string;
+  ariaLabelKey?: string;
+  id: string;
+  name: string;
+  options: ThemedSelectOption[];
+  selectedValue: string;
+}
+
+const { action, ariaLabel, ariaLabelKey, id, name, options, selectedValue } = Astro.props;
+const selectedOption = options.find((option) => option.value === selectedValue) ?? options[0];
+const menuId = `${id}-menu`;
+---
+
+<div
+  class="kc-select"
+  data-themed-select
+  data-select-action={action}
+  data-select-name={name}
+  data-select-value={selectedOption?.value}
+>
+  <button
+    class="kc-select__trigger"
+    type="button"
+    aria-controls={menuId}
+    aria-expanded="false"
+    aria-haspopup="listbox"
+    aria-label={ariaLabel}
+    data-i18n-aria={ariaLabelKey}
+    data-themed-select-trigger
+  >
+    <span data-themed-select-value data-i18n={selectedOption?.i18nKey}>{selectedOption?.label}</span>
+    <span class="kc-select__chevron" aria-hidden="true">⌄</span>
+  </button>
+  <div
+    class="kc-select__menu"
+    id={menuId}
+    role="listbox"
+    aria-label={ariaLabel}
+    data-i18n-aria={ariaLabelKey}
+    data-themed-select-menu
+    hidden
+  >
+    <span class="kc-select__label" data-i18n={ariaLabelKey}>{ariaLabel}</span>
+    {options.map((option) => (
+      <button
+        class="kc-select__option"
+        type="button"
+        role="option"
+        aria-selected={option.value === selectedOption?.value ? 'true' : 'false'}
+        disabled={option.disabled}
+        data-themed-select-option
+        data-value={option.value}
+      >
+        <span class="kc-select__check" aria-hidden="true">✓</span>
+        <span data-i18n={option.i18nKey}>{option.label}</span>
+      </button>
+    ))}
+  </div>
+</div>
+
+<script>
+  type SelectWindow = Window & { __kawaiChenThemedSelect?: boolean };
+  type SelectEvent = CustomEvent<{ value?: string }>;
+  const selectWindow = window as SelectWindow;
+
+  function closeSelect(root: HTMLElement, restoreFocus = false): void {
+    const trigger = root.querySelector<HTMLButtonElement>('[data-themed-select-trigger]');
+    const menu = root.querySelector<HTMLElement>('[data-themed-select-menu]');
+    if (!trigger || !menu) return;
+    trigger.setAttribute('aria-expanded', 'false');
+    menu.hidden = true;
+    if (restoreFocus) trigger.focus();
+  }
+
+  function closeOtherSelects(active?: HTMLElement): void {
+    document.querySelectorAll<HTMLElement>('[data-themed-select]').forEach((root) => {
+      if (root !== active) closeSelect(root);
+    });
+  }
+
+  function openSelect(root: HTMLElement, focusSelected = false): void {
+    const trigger = root.querySelector<HTMLButtonElement>('[data-themed-select-trigger]');
+    const menu = root.querySelector<HTMLElement>('[data-themed-select-menu]');
+    if (!trigger || !menu) return;
+    closeOtherSelects(root);
+    trigger.setAttribute('aria-expanded', 'true');
+    menu.hidden = false;
+    if (focusSelected) {
+      const selected = root.querySelector<HTMLButtonElement>('[data-themed-select-option][aria-selected="true"]:not(:disabled)');
+      const first = root.querySelector<HTMLButtonElement>('[data-themed-select-option]:not(:disabled)');
+      (selected ?? first)?.focus();
+    }
+  }
+
+  function syncSelect(root: HTMLElement, value: string): void {
+    const options = [...root.querySelectorAll<HTMLButtonElement>('[data-themed-select-option]')];
+    const selected = options.find((option) => option.dataset.value === value && !option.disabled);
+    if (!selected) return;
+    root.dataset.selectValue = value;
+    options.forEach((option) => option.setAttribute('aria-selected', option === selected ? 'true' : 'false'));
+    const valueLabel = root.querySelector<HTMLElement>('[data-themed-select-value]');
+    if (!valueLabel) return;
+    valueLabel.textContent = selected.querySelector<HTMLElement>('span:last-child')?.textContent ?? value;
+    const i18nKey = selected.querySelector<HTMLElement>('[data-i18n]')?.dataset.i18n;
+    if (i18nKey) valueLabel.dataset.i18n = i18nKey;
+    else delete valueLabel.dataset.i18n;
+  }
+
+  function chooseOption(root: HTMLElement, option: HTMLButtonElement): void {
+    const value = option.dataset.value;
+    if (!value || option.disabled) return;
+    syncSelect(root, value);
+    closeSelect(root, true);
+    root.dispatchEvent(new CustomEvent('themed-select:change', { bubbles: true, detail: { value } }));
+    if (root.dataset.selectAction === 'navigate') window.location.assign(value);
+  }
+
+  if (!selectWindow.__kawaiChenThemedSelect) {
+    selectWindow.__kawaiChenThemedSelect = true;
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const root = target.closest<HTMLElement>('[data-themed-select]');
+      if (!root) return closeOtherSelects();
+      const trigger = target.closest<HTMLButtonElement>('[data-themed-select-trigger]');
+      if (trigger) return trigger.getAttribute('aria-expanded') === 'true' ? closeSelect(root) : openSelect(root);
+      const option = target.closest<HTMLButtonElement>('[data-themed-select-option]');
+      if (option) chooseOption(root, option);
+    });
+    document.addEventListener('keydown', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const root = target.closest<HTMLElement>('[data-themed-select]');
+      if (!root) return;
+      const trigger = target.closest<HTMLButtonElement>('[data-themed-select-trigger]');
+      const option = target.closest<HTMLButtonElement>('[data-themed-select-option]');
+      if (trigger && ['ArrowDown', 'ArrowUp', 'Enter', ' '].includes(event.key)) {
+        event.preventDefault();
+        return openSelect(root, true);
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        return closeSelect(root, true);
+      }
+      if (!option) return;
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        return chooseOption(root, option);
+      }
+      const enabled = [...root.querySelectorAll<HTMLButtonElement>('[data-themed-select-option]:not(:disabled)')];
+      const current = enabled.indexOf(option);
+      let next = current;
+      if (event.key === 'ArrowDown') next = (current + 1) % enabled.length;
+      else if (event.key === 'ArrowUp') next = (current - 1 + enabled.length) % enabled.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = enabled.length - 1;
+      else return;
+      event.preventDefault();
+      enabled[next]?.focus();
+    });
+    document.addEventListener('themed-select:set', (event) => {
+      const selectEvent = event as SelectEvent;
+      if (selectEvent.target instanceof HTMLElement && selectEvent.detail?.value) {
+        syncSelect(selectEvent.target, selectEvent.detail.value);
+      }
+    });
+  }
+</script>
+
+<style>
+  .kc-select { display: inline-flex; position: relative; }
+  .kc-select__trigger {
+    align-items: center; appearance: none;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--kc-surface-raised) 96%, white 4%), var(--kc-surface-raised));
+    border: 1px solid var(--kc-border); border-radius: 999px; color: var(--kc-text); cursor: pointer;
+    display: inline-flex; font: 750 .72rem var(--kc-font-mono); gap: .48rem;
+    height: var(--kc-header-control-height, 2.3rem); justify-content: space-between;
+    min-height: var(--kc-header-control-height, 2.3rem); min-width: 5.2rem; padding: .35rem .68rem .35rem .78rem;
+    white-space: nowrap;
+  }
+  .kc-select__trigger:hover, .kc-select__trigger[aria-expanded='true'] {
+    border-color: color-mix(in srgb, var(--kc-accent) 65%, var(--kc-border));
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--kc-accent) 10%, transparent);
+  }
+  .kc-select__chevron { color: var(--kc-muted); font-size: .78rem; transition: transform 160ms ease; }
+  .kc-select__trigger[aria-expanded='true'] .kc-select__chevron { transform: rotate(180deg); }
+  .kc-select__menu {
+    background: color-mix(in srgb, var(--kc-surface-raised) 98%, transparent); border: 1px solid var(--kc-border);
+    border-radius: .9rem; box-shadow: 0 1rem 3rem rgb(0 0 0 / 42%); display: grid; gap: .18rem;
+    min-width: max(10rem, 100%); padding: .42rem; position: absolute; right: 0; top: calc(100% + .55rem); z-index: 80;
+  }
+  .kc-select__menu[hidden] { display: none; }
+  .kc-select__label { color: var(--kc-muted); font: 800 .56rem var(--kc-font-mono); letter-spacing: .09em; padding: .45rem .58rem .35rem; text-transform: uppercase; }
+  .kc-select__option {
+    align-items: center; appearance: none; background: transparent; border: 0; border-radius: .55rem;
+    color: var(--kc-muted); cursor: pointer; display: grid; font: 700 .75rem var(--kc-font-mono); gap: .5rem;
+    grid-template-columns: .9rem 1fr; padding: .58rem .65rem; text-align: left; width: 100%;
+  }
+  .kc-select__option:hover, .kc-select__option[aria-selected='true'] { background: var(--kc-accent-soft); color: var(--kc-text); }
+  .kc-select__option:disabled { cursor: not-allowed; opacity: .35; }
+  .kc-select__check { color: var(--kc-accent); opacity: 0; }
+  .kc-select__option[aria-selected='true'] .kc-select__check { opacity: 1; }
+  @media (max-width: 620px) { .kc-select__trigger { max-width: 7rem; min-width: 4.7rem; } }
+</style>

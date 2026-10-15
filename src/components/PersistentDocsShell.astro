@@ -1,0 +1,113 @@
+---
+interface Props {
+  navigationAriaLabel?: string;
+  navigationPersistenceKey: string;
+  scrollStorageKey?: string;
+  tocAriaLabel?: string;
+}
+
+const {
+  navigationAriaLabel = 'Documentation navigation',
+  navigationPersistenceKey,
+  scrollStorageKey = navigationPersistenceKey,
+  tocAriaLabel = 'On this page',
+} = Astro.props;
+---
+
+<div class="kc-docs-shell">
+  <aside
+    class="kc-sidebar"
+    aria-label={navigationAriaLabel}
+    data-doc-scroll-panel
+    data-doc-scroll-key={`${scrollStorageKey}:navigation`}
+    transition:persist={navigationPersistenceKey}
+  >
+    <slot name="navigation" />
+  </aside>
+  <main class="kc-docs-main">
+    <article class="kc-prose"><slot /></article>
+  </main>
+  <aside
+    class="kc-toc"
+    aria-label={tocAriaLabel}
+    data-doc-scroll-panel
+    data-doc-scroll-key={`${scrollStorageKey}:index`}
+  >
+    <slot name="toc" />
+  </aside>
+</div>
+
+<script>
+  type DocsShellWindow = Window & { __kawaiChenDocsShell?: boolean };
+  const docsShellWindow = window as DocsShellWindow;
+
+  function savePanelScroll(): void {
+    document.querySelectorAll<HTMLElement>('[data-doc-scroll-panel]').forEach((panel) => {
+      const key = panel.dataset.docScrollKey;
+      if (!key) return;
+      try { window.sessionStorage.setItem(`kawaichen:docs-scroll:${key}`, String(panel.scrollTop)); } catch {}
+    });
+  }
+
+  function restorePanelScroll(): void {
+    window.requestAnimationFrame(() => {
+      document.querySelectorAll<HTMLElement>('[data-doc-scroll-panel]').forEach((panel) => {
+        const key = panel.dataset.docScrollKey;
+        if (!key) return;
+        try {
+          const saved = window.sessionStorage.getItem(`kawaichen:docs-scroll:${key}`);
+          if (saved !== null) panel.scrollTop = Number(saved) || 0;
+        } catch {}
+      });
+    });
+  }
+
+  function syncNavigationState(): void {
+    document.querySelectorAll<HTMLAnchorElement>('.kc-sidebar a[href]').forEach((link) => {
+      const current = new URL(link.href, window.location.origin).pathname === window.location.pathname;
+      if (current) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
+  }
+
+  function refreshDocsShell(): void {
+    restorePanelScroll();
+    syncNavigationState();
+  }
+
+  if (!docsShellWindow.__kawaiChenDocsShell) {
+    docsShellWindow.__kawaiChenDocsShell = true;
+    document.addEventListener('astro:before-swap', savePanelScroll);
+    document.addEventListener('astro:page-load', refreshDocsShell);
+    window.addEventListener('pagehide', savePanelScroll);
+  }
+  refreshDocsShell();
+</script>
+
+<style>
+  .kc-docs-shell {
+    display: grid;
+    grid-template-columns: var(--kc-docs-columns, minmax(16rem, 19rem) minmax(0, 58rem) minmax(12rem, 16rem));
+    justify-content: center;
+    min-height: calc(100vh - var(--kc-docs-header-offset, var(--kc-header-height)));
+  }
+  .kc-sidebar, .kc-toc {
+    max-height: calc(100vh - var(--kc-docs-header-offset, var(--kc-header-height)));
+    overflow-y: auto;
+    padding: var(--kc-docs-panel-padding, 1.8rem 1.25rem 3rem);
+    position: sticky;
+    top: var(--kc-docs-header-offset, var(--kc-header-height));
+  }
+  .kc-sidebar { border-right: 1px solid var(--kc-border); }
+  .kc-toc { border-left: 1px solid var(--kc-border); }
+  .kc-docs-main { min-width: 0; padding: var(--kc-docs-main-padding, 3.5rem clamp(1.4rem, 4vw, 4.25rem) 7rem); }
+  @media (max-width: 1180px) {
+    .kc-docs-shell { grid-template-columns: var(--kc-docs-tablet-columns, minmax(15rem, 18rem) minmax(0, 1fr)); }
+    .kc-toc { display: none; }
+  }
+  @media (max-width: 760px) {
+    .kc-docs-shell { display: block; }
+    .kc-sidebar { border-bottom: 1px solid var(--kc-border); border-right: 0; max-height: 15rem; padding: 1rem; position: static; }
+    .kc-docs-main { padding-top: 2rem; }
+  }
+</style>

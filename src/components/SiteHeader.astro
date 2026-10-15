@@ -11,21 +11,25 @@ const currentPath = Astro.url.pathname;
 ---
 
 <header class="kc-header">
-  <a class="kc-brand" href={site.homeHref ?? '/'}>{site.title}</a>
-  {nav.length > 0 && (
-    <nav aria-label="주요 탐색">
-      {nav.map((item) => (
-        <a
-          href={item.href}
-          aria-current={!item.external && currentPath === item.href ? 'page' : undefined}
-          target={item.external ? '_blank' : undefined}
-          rel={item.external ? 'noreferrer' : undefined}
-        >
-          {item.label}
-        </a>
-      ))}
-    </nav>
-  )}
+  <slot name="brand">
+    <a class="kc-brand" href={site.homeHref ?? '/'}>{site.title}</a>
+  </slot>
+  <slot name="navigation">
+    {nav.length > 0 && (
+      <nav aria-label="주요 탐색">
+        {nav.map((item) => (
+          <a
+            href={item.href}
+            aria-current={!item.external && currentPath === item.href ? 'page' : undefined}
+            target={item.external ? '_blank' : undefined}
+            rel={item.external ? 'noreferrer' : undefined}
+          >
+            {item.label}
+          </a>
+        ))}
+      </nav>
+    )}
+  </slot>
   <slot name="actions" />
 </header>
 

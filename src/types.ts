@@ -9,3 +9,10 @@ export interface SiteIdentity {
   description?: string;
   homeHref?: string;
 }
+
+export interface ThemedSelectOption {
+  disabled?: boolean;
+  i18nKey?: string;
+  label: string;
+  value: string;
+}
